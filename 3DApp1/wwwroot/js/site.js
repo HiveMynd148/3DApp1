@@ -40,42 +40,41 @@ window.addEventListener('load', async () => {
     const gridHelper = new THREE.GridHelper(10, 10);
     scene.add(gridHelper);
 
-    // Model loading
+    // Model loading from a URL (using CORS proxy for testing)
     const loader = new GLTFLoader();
-    const modelPath = '/Models/model.glb';
+    const modelUrl = 'https://cors-anywhere.herokuapp.com/https://github.com/HiveMynd148/3DApp1/raw/refs/heads/master/3DApp1/wwwroot/Models/model.glb'; // Use CORS proxy for testing
 
     try {
         // First, try to fetch the file directly to check if it's accessible
-        const response = await fetch(modelPath);
+        const response = await fetch(modelUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         // If fetch succeeds, load the model
-        const gltf = await new Promise((resolve, reject) => {
-            loader.load(
-                modelPath,
-                resolve,
-                (xhr) => {
-                    const percentComplete = (xhr.loaded / xhr.total) * 100;
-                    console.log(`${Math.round(percentComplete)}% loaded`);
-                },
-                reject
-            );
-        });
+        loader.load(
+            modelUrl,
+            (gltf) => {
+                const model = gltf.scene;
+                scene.add(model);
 
-        const model = gltf.scene;
-        scene.add(model);
+                // Center the model
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
 
-        // Center the model
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
-
-        console.log('Model loaded successfully');
+                console.log('Model loaded successfully');
+            },
+            (xhr) => {
+                const percentComplete = (xhr.loaded / xhr.total) * 100;
+                console.log(`${Math.round(percentComplete)}% loaded`);
+            },
+            (error) => {
+                console.error('Error loading model:', error);
+            }
+        );
     } catch (error) {
-        console.error('Error loading model:', error);
-        console.log('Attempted to load from:', new URL(modelPath, window.location.href).href);
+        console.error('Error fetching model:', error);
     }
 
     // Controls
