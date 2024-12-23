@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.StaticFiles;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -43,10 +45,17 @@ public class Startup
         }
 
         app.UseHttpsRedirection();
-        app.UseStaticFiles();
-
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            ServeUnknownFileTypes = true,
+            DefaultContentType = "application/octet-stream",
+            ContentTypeProvider = new FileExtensionContentTypeProvider
+            {
+                Mappings = { [".glb"] = "model/gltf-binary" }
+            }
+        }); 
+        
         app.UseRouting();
-
         app.UseAuthorization();
 
         app.UseEndpoints(endpoints =>
